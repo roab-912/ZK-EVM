@@ -5,6 +5,8 @@ use crate::errors::EvmError;
 pub enum Opcode {
     /// `0x00` — halt execution.
     Stop,
+    /// `0x01` — pop two values, push their sum (mod 2²⁵⁶).
+    Add,
     /// `0x50` — pop and discard the top stack item.
     Pop,
     /// `0x60` — push a 1-byte immediate (zero-extended) onto the stack.
@@ -16,6 +18,7 @@ impl Opcode {
     pub const fn as_byte(self) -> u8 {
         match self {
             Opcode::Stop => 0x00,
+            Opcode::Add => 0x01,
             Opcode::Pop => 0x50,
             Opcode::Push1 => 0x60,
         }
@@ -39,6 +42,7 @@ impl TryFrom<u8> for Opcode {
     fn try_from(byte: u8) -> Result<Self, Self::Error> {
         match byte {
             0x00 => Ok(Opcode::Stop),
+            0x01 => Ok(Opcode::Add),
             0x50 => Ok(Opcode::Pop),
             0x60 => Ok(Opcode::Push1),
             other => Err(EvmError::UnknownOpcode(other)),

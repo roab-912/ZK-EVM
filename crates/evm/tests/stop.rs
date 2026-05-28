@@ -28,9 +28,9 @@ fn empty_code_is_implicit_stop() {
 
 #[test]
 fn unknown_opcode_errors() {
-    // 0x01 (ADD) is not implemented yet.
-    let mut state = EvmState::new(vec![0x01]);
-    assert_eq!(step(&mut state), Err(EvmError::UnknownOpcode(0x01)));
+    // 0x21 is an unassigned EVM opcode.
+    let mut state = EvmState::new(vec![0x21]);
+    assert_eq!(step(&mut state), Err(EvmError::UnknownOpcode(0x21)));
 }
 
 #[test]
