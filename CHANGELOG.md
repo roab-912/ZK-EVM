@@ -4,6 +4,23 @@ Toutes les évolutions notables du projet sont documentées ici, une section par
 version (cf. `.features/vX.Y-*.md` pour les specs détaillées). Format inspiré de
 [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [v0.5-sub] — 2026-05-28
+
+Phase 1 — soustraction.
+
+### Ajouté
+- Opcode `SUB` (`0x03`) : `top - second` en wrapping (`U256::wrapping_sub`).
+- Tests natifs (`sub.rs`) : `5-3=2`, wrapping `3-5=MAX-1`, `7-7=0`, underflow.
+- Extension de l'oracle revm (`sub_matches_revm` sur 4 programmes, `sub_underflow_matches_revm`).
+
+### Choix techniques
+- **Ordre des opérandes** : `a = top` (premier `pop`), `b = second`, résultat `a - b`. C'est la source d'erreur classique ; le test `3-5=MAX-1` verrouille l'ordre.
+
+### Validation
+- `cargo fmt --check`, `cargo clippy -- -D warnings`, `cargo test --all` (32 tests) : OK.
+- Build `--no-default-features` (`no_std`) : OK.
+- `revm` : 4 programmes `SUB` (dont le wrapping `3-5`) → stack identique ; underflow des deux côtés.
+
 ## [v0.4-add] — 2026-05-28
 
 Phase 1 — première opération arithmétique. Jalon symbolique : « 2 + 3 = 5 ».

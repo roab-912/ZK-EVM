@@ -1,6 +1,6 @@
 //! Pure EVM interpreter (no ZK).
 //!
-//! Implemented so far: `STOP` (0x00), `ADD` (0x01), `POP` (0x50),
+//! Implemented so far: `STOP` (0x00), `ADD` (0x01), `SUB` (0x03), `POP` (0x50),
 //! `PUSH1` (0x60). [`run`] executes bytecode until it halts.
 
 #![cfg_attr(not(feature = "std"), no_std)]
