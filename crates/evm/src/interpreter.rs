@@ -47,6 +47,11 @@ pub fn step(state: &mut EvmState) -> Result<(), EvmError> {
             let (a, b) = pop2(state)?;
             push(state, a.wrapping_add(b))?;
         }
+        Opcode::Sub => {
+            // a = top, b = second; result = a - b (wrapping).
+            let (a, b) = pop2(state)?;
+            push(state, a.wrapping_sub(b))?;
+        }
         Opcode::Pop => {
             pop1(state)?;
         }
