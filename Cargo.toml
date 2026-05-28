@@ -1,0 +1,11 @@
+[workspace]
+resolver = "2"
+members = ["crates/evm"]
+
+[workspace.package]
+edition = "2021"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/roab-912/ZK-EVM"
+
+[workspace.dependencies]
+ruint = { version = "1", default-features = false }
