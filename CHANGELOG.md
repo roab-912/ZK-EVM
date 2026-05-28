@@ -4,6 +4,20 @@ Toutes les évolutions notables du projet sont documentées ici, une section par
 version (cf. `.features/vX.Y-*.md` pour les specs détaillées). Format inspiré de
 [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [v0.3-pop] — 2026-05-28
+
+Phase 1 — retrait du top de la stack.
+
+### Ajouté
+- Opcode `POP` (`0x50`) : retire et jette le top de la stack, `pc += 1`.
+- Helper `pop1()` qui factorise `StackUnderflow` (préfigure `pop2()`/`pop3()`).
+- Tests natifs (`pop.rs`) + extension de l'oracle revm (`pop_matches_revm`, `pop_underflow_matches_revm`).
+
+### Validation
+- `cargo fmt --check`, `cargo clippy -- -D warnings`, `cargo test --all` (19 tests) : OK.
+- Build `--no-default-features` (`no_std`) : OK.
+- `revm` : `PUSH1 x, POP` → stack identique ; `POP` sur stack vide → underflow des deux côtés (`InstructionResult::StackUnderflow` / `EvmError::StackUnderflow`).
+
 ## [v0.2-push1] — 2026-05-28
 
 Phase 1 — premier opcode avec opérande immédiat.
