@@ -24,11 +24,12 @@ Pour chaque feature :
    git checkout -b v0.0-setup        # ex. pour v0.0
    ```
 2. **Développement** — tout le travail se fait sur cette branche, dans WSL Debian.
-3. **Critère de PR (bloquant)** — la PR n'est ouverte **que lorsque** :
+3. **Changelog (obligatoire)** — ajouter une section pour la version dans `CHANGELOG.md` (racine, style Keep a Changelog) décrivant le développement réalisé : ce qui est ajouté, les choix techniques, et la validation (tests + revm). À faire avant la PR.
+4. **Critère de PR (bloquant)** — la PR n'est ouverte **que lorsque** :
    - la suite de tests passe et **vérifie complètement** le code développé, et
    - le résultat est **validé contre `revm`** sur les programmes de test concernés.
    Tant que ces deux conditions ne sont pas réunies, on ne crée pas de PR.
-4. **PR** — ouvrir la PR de la branche `vX.Y-<nom>` vers `main` une fois les critères remplis.
+5. **PR** — ouvrir la PR de la branche `vX.Y-<nom>` vers `main` une fois les critères remplis.
 
 Remote : `git@github.com:roab-912/ZK-EVM.git` (branche par défaut `main`).
 
