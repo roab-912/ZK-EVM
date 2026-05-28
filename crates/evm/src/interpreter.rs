@@ -13,6 +13,11 @@ fn push(state: &mut EvmState, value: U256) -> Result<(), EvmError> {
     Ok(())
 }
 
+/// Pop the top stack item, or `StackUnderflow` if the stack is empty.
+fn pop1(state: &mut EvmState) -> Result<U256, EvmError> {
+    state.stack.pop().ok_or(EvmError::StackUnderflow)
+}
+
 /// Execute a single step: decode the opcode at `pc` and apply its effect.
 ///
 /// Running past the end of the code is treated as an implicit `STOP`, matching
@@ -30,6 +35,9 @@ pub fn step(state: &mut EvmState) -> Result<(), EvmError> {
     match opcode {
         Opcode::Stop => {
             state.halted = true;
+        }
+        Opcode::Pop => {
+            pop1(state)?;
         }
         Opcode::Push1 => {
             let imm = state.code.get(state.pc + 1).copied().unwrap_or(0);
