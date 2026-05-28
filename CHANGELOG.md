@@ -4,6 +4,24 @@ Toutes les évolutions notables du projet sont documentées ici, une section par
 version (cf. `.features/vX.Y-*.md` pour les specs détaillées). Format inspiré de
 [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [v0.7-dup1] — 2026-05-28
+
+Phase 1 — duplication de la stack.
+
+### Ajouté
+- Opcode `DUP1` (`0x80`) : duplique le top de la stack.
+- Helper `dup(state, n)` généralisé (`n`-ième élément depuis le top), prêt pour `DUP2`..`DUP16` (v0.11) ; applique la limite 1024 → `StackOverflow`.
+- Tests natifs (`dup1.rs`) : `[5]`→`[5,5]`, ne duplique que le top, underflow, overflow à 1024 éléments.
+- Extension de l'oracle revm (`dup1_matches_revm`, `dup1_underflow_matches_revm`).
+
+### Choix techniques
+- **Convention oracle pour les cas d'erreur** : on n'asserte plus la variante exacte de `InstructionResult` de revm, seulement que revm **et** nous rejetons le programme. Raison : revm renvoie `StackOverflow` (et non `StackUnderflow`) pour un `DUP` sur stack trop courte — son `Stack::dup` fusionne les deux bornes. Notre `StackUnderflow` reste le bon sémantique EVM.
+
+### Validation
+- `cargo fmt --check`, `cargo clippy -- -D warnings`, `cargo test --all` (45 tests) : OK.
+- Build `--no-default-features` (`no_std`) : OK.
+- `revm` : `DUP1` → stack identique ; underflow rejeté des deux côtés.
+
 ## [v0.6-mul] — 2026-05-28
 
 Phase 1 — multiplication.
