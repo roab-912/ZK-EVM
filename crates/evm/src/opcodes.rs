@@ -15,6 +15,8 @@ pub enum Opcode {
     Pop,
     /// `0x60` — push a 1-byte immediate (zero-extended) onto the stack.
     Push1,
+    /// `0x80` — duplicate the top stack item.
+    Dup1,
 }
 
 impl Opcode {
@@ -27,6 +29,7 @@ impl Opcode {
             Opcode::Sub => 0x03,
             Opcode::Pop => 0x50,
             Opcode::Push1 => 0x60,
+            Opcode::Dup1 => 0x80,
         }
     }
 
@@ -53,6 +56,7 @@ impl TryFrom<u8> for Opcode {
             0x03 => Ok(Opcode::Sub),
             0x50 => Ok(Opcode::Pop),
             0x60 => Ok(Opcode::Push1),
+            0x80 => Ok(Opcode::Dup1),
             other => Err(EvmError::UnknownOpcode(other)),
         }
     }

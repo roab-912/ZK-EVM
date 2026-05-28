@@ -227,3 +227,42 @@ fn mul_underflow_matches_revm() {
     let mut state = EvmState::new(code);
     assert_eq!(run(&mut state), Err(EvmError::StackUnderflow));
 }
+
+#[test]
+fn dup1_matches_revm() {
+    let programs: &[&[u8]] = &[
+        &[0x60, 0x05, 0x80, 0x00],             // PUSH1 5, DUP1 -> [5, 5]
+        &[0x60, 0x01, 0x60, 0x02, 0x80, 0x00], // PUSH1 1, PUSH1 2, DUP1 -> [1, 2, 2]
+    ];
+
+    for &program in programs {
+        let code = program.to_vec();
+        let (revm_result, revm_stack) = revm_exec(code.clone());
+
+        let mut state = EvmState::new(code.clone());
+        run(&mut state).unwrap();
+
+        assert!(state.halted, "not halted for {program:02x?}");
+        assert_eq!(
+            revm_result,
+            InstructionResult::Stop,
+            "revm result for {program:02x?}"
+        );
+        assert_eq!(state.stack, revm_stack, "stack mismatch for {program:02x?}");
+    }
+}
+
+#[test]
+fn dup1_underflow_matches_revm() {
+    // DUP1 on an empty stack: both reject the program. revm folds the DUP
+    // bounds check into one boolean and labels the failure `StackOverflow`,
+    // whereas we report the (semantically correct) `StackUnderflow`; what we
+    // assert is that *both* refuse to execute it.
+    let code = vec![0x80, 0x00]; // DUP1, STOP
+
+    let (revm_result, _) = revm_exec(code.clone());
+    assert!(!revm_result.is_ok(), "revm should reject DUP1 underflow");
+
+    let mut state = EvmState::new(code);
+    assert_eq!(run(&mut state), Err(EvmError::StackUnderflow));
+}

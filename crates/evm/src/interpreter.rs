@@ -25,6 +25,18 @@ fn pop2(state: &mut EvmState) -> Result<(U256, U256), EvmError> {
     Ok((top, second))
 }
 
+/// Duplicate the `n`-th item from the top (`n = 1` is the top) onto the stack.
+///
+/// Generalised for `DUP1`..`DUP16` (v0.11).
+fn dup(state: &mut EvmState, n: usize) -> Result<(), EvmError> {
+    let i = state
+        .stack
+        .len()
+        .checked_sub(n)
+        .ok_or(EvmError::StackUnderflow)?;
+    push(state, state.stack[i])
+}
+
 /// Execute a single step: decode the opcode at `pc` and apply its effect.
 ///
 /// Running past the end of the code is treated as an implicit `STOP`, matching
@@ -62,6 +74,9 @@ pub fn step(state: &mut EvmState) -> Result<(), EvmError> {
         Opcode::Push1 => {
             let imm = state.code.get(state.pc + 1).copied().unwrap_or(0);
             push(state, U256::from(imm))?;
+        }
+        Opcode::Dup1 => {
+            dup(state, 1)?;
         }
     }
     state.pc += opcode.advance();
