@@ -115,3 +115,41 @@ fn pop_underflow_matches_revm() {
     let mut state = EvmState::new(code);
     assert_eq!(run(&mut state), Err(EvmError::StackUnderflow));
 }
+
+#[test]
+fn add_matches_revm() {
+    let programs: &[&[u8]] = &[
+        &[0x60, 0x02, 0x60, 0x03, 0x01, 0x00], // 2 + 3 -> [5]
+        &[0x60, 0x00, 0x60, 0x00, 0x01, 0x00], // 0 + 0 -> [0]
+        &[0x60, 0xff, 0x60, 0x01, 0x01, 0x00], // 255 + 1 -> [256]
+        &[0x60, 0x0a, 0x60, 0x14, 0x01, 0x00], // 10 + 20 -> [30]
+    ];
+
+    for &program in programs {
+        let code = program.to_vec();
+        let (revm_result, revm_stack) = revm_exec(code.clone());
+
+        let mut state = EvmState::new(code.clone());
+        run(&mut state).unwrap();
+
+        assert!(state.halted, "not halted for {program:02x?}");
+        assert_eq!(
+            revm_result,
+            InstructionResult::Stop,
+            "revm result for {program:02x?}"
+        );
+        assert_eq!(state.stack, revm_stack, "stack mismatch for {program:02x?}");
+    }
+}
+
+#[test]
+fn add_underflow_matches_revm() {
+    // ADD with a single operand: both revm and our interpreter must fail.
+    let code = vec![0x60, 0x05, 0x01, 0x00]; // PUSH1 5, ADD, STOP
+
+    let (revm_result, _) = revm_exec(code.clone());
+    assert_eq!(revm_result, InstructionResult::StackUnderflow);
+
+    let mut state = EvmState::new(code);
+    assert_eq!(run(&mut state), Err(EvmError::StackUnderflow));
+}

@@ -4,6 +4,25 @@ Toutes les évolutions notables du projet sont documentées ici, une section par
 version (cf. `.features/vX.Y-*.md` pour les specs détaillées). Format inspiré de
 [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [v0.4-add] — 2026-05-28
+
+Phase 1 — première opération arithmétique. Jalon symbolique : « 2 + 3 = 5 ».
+
+### Ajouté
+- Opcode `ADD` (`0x01`) : pop `a` (top) et `b`, push `a + b` mod 2²⁵⁶ (`U256::wrapping_add`).
+- Helper `pop2()` → `(top, second)`.
+- Tests natifs (`add.rs`) : `2+3=5`, wrapping `MAX+1=0` et `(MAX-2)+5=2` (stack construite à la main en attendant `PUSH32` en v0.10), underflows.
+- Extension de l'oracle revm (`add_matches_revm` sur 4 programmes, `add_underflow_matches_revm`).
+
+### Choix techniques
+- **Modulo 2²⁵⁶ via `wrapping_add`** (jamais `checked_add` qui panique).
+- Test `unknown_opcode_errors` migré de `0x01` (désormais ADD) vers `0x21` (opcode EVM non assigné, stable).
+
+### Validation
+- `cargo fmt --check`, `cargo clippy -- -D warnings`, `cargo test --all` (26 tests) : OK.
+- Build `--no-default-features` (`no_std`) : OK.
+- `revm` : 4 programmes `ADD` (dont `255+1=256`) → stack identique ; `ADD` avec un seul opérande → underflow des deux côtés.
+
 ## [v0.3-pop] — 2026-05-28
 
 Phase 1 — retrait du top de la stack.
