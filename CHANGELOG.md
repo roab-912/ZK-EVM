@@ -4,6 +4,26 @@ Toutes les évolutions notables du projet sont documentées ici, une section par
 version (cf. `.features/vX.Y-*.md` pour les specs détaillées). Format inspiré de
 [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [v0.2-push1] — 2026-05-28
+
+Phase 1 — premier opcode avec opérande immédiat.
+
+### Ajouté
+- Opcode `PUSH1` (`0x60`) : lit l'octet suivant, le pousse (zero-extended en `U256`), `pc += 2`.
+- `Opcode::advance()` : nombre d'octets dont avance le PC (`2` pour `PUSH1`, `1` par défaut) — anticipe `PUSH2`..`PUSH32` (`advance = 1 + n`).
+- `step` unifie l'avance via `pc += opcode.advance()` (évite la boucle infinie « `pc += 1` puis re-lecture »).
+- Limite de stack à 1024 éléments → `StackOverflow`.
+- Re-export public `evm::U256` (alias `ruint`).
+- Tests natifs (`push1.rs`) + extension de l'oracle revm (`push1_matches_revm`, 6 programmes).
+
+### Choix techniques
+- **Immédiat manquant = `0`** (`[0x60]` → push `0`, puis STOP implicite), conforme à revm/geth, et non une erreur comme suggéré par la spec — seul comportement validable contre l'oracle revm.
+
+### Validation
+- `cargo fmt --check`, `cargo clippy -- -D warnings`, `cargo test --all` (14 tests) : OK.
+- Build `--no-default-features` (`no_std`) : OK.
+- `revm` : 6 programmes `PUSH1` (valeur, zero-ext, immédiat manquant, double push, halt implicite) → mêmes résultat et stack que revm.
+
 ## [v0.1-stop] — 2026-05-28
 
 Phase 1 — premier opcode et première validation contre `revm`.
