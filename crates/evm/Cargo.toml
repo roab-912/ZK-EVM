@@ -11,3 +11,6 @@ std = ["ruint/std"]
 
 [dependencies]
 ruint = { workspace = true }
+
+[dev-dependencies]
+revm = "40.0.3"
