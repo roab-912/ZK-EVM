@@ -51,3 +51,31 @@ fn empty_code_matches_revm() {
     assert!(state.halted);
     assert_eq!(state.stack, revm_stack);
 }
+
+#[test]
+fn push1_matches_revm() {
+    let programs: &[&[u8]] = &[
+        &[0x60, 0x05, 0x00],             // PUSH1 5, STOP -> [5]
+        &[0x60, 0xff, 0x00],             // PUSH1 255    -> [255]
+        &[0x60, 0x00, 0x00],             // PUSH1 0      -> [0]
+        &[0x60, 0x05],                   // no STOP, implicit halt -> [5]
+        &[0x60],                         // missing immediate -> [0]
+        &[0x60, 0x01, 0x60, 0x02, 0x00], // two pushes -> [1, 2]
+    ];
+
+    for &program in programs {
+        let code = program.to_vec();
+        let (revm_result, revm_stack) = revm_exec(code.clone());
+
+        let mut state = EvmState::new(code.clone());
+        run(&mut state).unwrap();
+
+        assert!(state.halted, "not halted for {program:02x?}");
+        assert_eq!(
+            revm_result,
+            InstructionResult::Stop,
+            "revm result for {program:02x?}"
+        );
+        assert_eq!(state.stack, revm_stack, "stack mismatch for {program:02x?}");
+    }
+}

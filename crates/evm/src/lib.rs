@@ -1,6 +1,7 @@
 //! Pure EVM interpreter (no ZK).
 //!
-//! Implemented so far: `STOP` (0x00). [`run`] executes bytecode until it halts.
+//! Implemented so far: `STOP` (0x00), `PUSH1` (0x60). [`run`] executes bytecode
+//! until it halts.
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
@@ -10,6 +11,8 @@ pub mod errors;
 pub mod interpreter;
 pub mod opcodes;
 pub mod state;
+
+pub use ruint::aliases::U256;
 
 pub use errors::EvmError;
 pub use interpreter::{run, step};
