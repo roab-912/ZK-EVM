@@ -4,6 +4,23 @@ Toutes les évolutions notables du projet sont documentées ici, une section par
 version (cf. `.features/vX.Y-*.md` pour les specs détaillées). Format inspiré de
 [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [v0.6-mul] — 2026-05-28
+
+Phase 1 — multiplication.
+
+### Ajouté
+- Opcode `MUL` (`0x02`) : `push((a * b) mod 2²⁵⁶)` (`U256::wrapping_mul`).
+- Tests natifs (`mul.rs`) : `3*4=12`, `x*0=0`, `x*1=x`, overflow `2¹²⁸ * 2¹²⁸ = 0` (stack manuelle), underflow.
+- Extension de l'oracle revm (`mul_matches_revm` sur 4 programmes, `mul_underflow_matches_revm`).
+
+### Notes
+- Gas de `MUL` = 5 (vs 3 pour ADD/SUB) — sans effet tant que le compteur de gas n'existe pas (v0.21), noté pour mémoire.
+
+### Validation
+- `cargo fmt --check`, `cargo clippy -- -D warnings`, `cargo test --all` (39 tests) : OK.
+- Build `--no-default-features` (`no_std`) : OK.
+- `revm` : 4 programmes `MUL` (dont `255*2=510`) → stack identique ; underflow des deux côtés.
+
 ## [v0.5-sub] — 2026-05-28
 
 Phase 1 — soustraction.
