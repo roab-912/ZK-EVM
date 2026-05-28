@@ -1,7 +1,6 @@
 //! Pure EVM interpreter (no ZK).
 //!
-//! v0.0 is a skeleton: it wires up the crate structure but contains no opcode
-//! logic yet. The interpreter always reports an unknown opcode.
+//! Implemented so far: `STOP` (0x00). [`run`] executes bytecode until it halts.
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
@@ -13,6 +12,6 @@ pub mod opcodes;
 pub mod state;
 
 pub use errors::EvmError;
-pub use interpreter::step;
+pub use interpreter::{run, step};
 pub use opcodes::Opcode;
 pub use state::{EvmState, STACK_LIMIT};

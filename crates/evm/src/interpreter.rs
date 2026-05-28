@@ -1,15 +1,32 @@
 use crate::errors::EvmError;
+use crate::opcodes::Opcode;
 use crate::state::EvmState;
 
-/// Execute a single EVM step.
+/// Execute a single step: decode the opcode at `pc` and apply its effect.
 ///
-/// v0.0 is a skeleton with no opcode decoding: it fetches the byte at the
-/// current program counter and reports it as unknown. Real dispatch arrives in
-/// v0.1.
+/// Running past the end of the code is treated as an implicit `STOP`, matching
+/// revm / geth behaviour.
 pub fn step(state: &mut EvmState) -> Result<(), EvmError> {
     if state.halted {
         return Err(EvmError::Halted);
     }
-    let op = *state.code.get(state.pc).ok_or(EvmError::InvalidPc)?;
-    Err(EvmError::UnknownOpcode(op))
+    let Some(&byte) = state.code.get(state.pc) else {
+        state.halted = true;
+        return Ok(());
+    };
+    match Opcode::try_from(byte)? {
+        Opcode::Stop => {
+            state.halted = true;
+            state.pc += 1;
+        }
+    }
+    Ok(())
+}
+
+/// Run the interpreter until it halts.
+pub fn run(state: &mut EvmState) -> Result<(), EvmError> {
+    while !state.halted {
+        step(state)?;
+    }
+    Ok(())
 }
