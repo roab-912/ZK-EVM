@@ -37,6 +37,17 @@ fn dup(state: &mut EvmState, n: usize) -> Result<(), EvmError> {
     push(state, state.stack[i])
 }
 
+/// Swap the top item with the one `n` positions below it (`n = 1` is the second).
+///
+/// Generalised for `SWAP1`..`SWAP16` (v0.11).
+fn swap(state: &mut EvmState, n: usize) -> Result<(), EvmError> {
+    let len = state.stack.len();
+    let top = len.checked_sub(1).ok_or(EvmError::StackUnderflow)?;
+    let other = len.checked_sub(n + 1).ok_or(EvmError::StackUnderflow)?;
+    state.stack.swap(top, other);
+    Ok(())
+}
+
 /// Execute a single step: decode the opcode at `pc` and apply its effect.
 ///
 /// Running past the end of the code is treated as an implicit `STOP`, matching
@@ -77,6 +88,9 @@ pub fn step(state: &mut EvmState) -> Result<(), EvmError> {
         }
         Opcode::Dup1 => {
             dup(state, 1)?;
+        }
+        Opcode::Swap1 => {
+            swap(state, 1)?;
         }
     }
     state.pc += opcode.advance();

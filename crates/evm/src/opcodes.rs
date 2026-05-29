@@ -17,6 +17,8 @@ pub enum Opcode {
     Push1,
     /// `0x80` — duplicate the top stack item.
     Dup1,
+    /// `0x90` — swap the top stack item with the second.
+    Swap1,
 }
 
 impl Opcode {
@@ -30,6 +32,7 @@ impl Opcode {
             Opcode::Pop => 0x50,
             Opcode::Push1 => 0x60,
             Opcode::Dup1 => 0x80,
+            Opcode::Swap1 => 0x90,
         }
     }
 
@@ -57,6 +60,7 @@ impl TryFrom<u8> for Opcode {
             0x50 => Ok(Opcode::Pop),
             0x60 => Ok(Opcode::Push1),
             0x80 => Ok(Opcode::Dup1),
+            0x90 => Ok(Opcode::Swap1),
             other => Err(EvmError::UnknownOpcode(other)),
         }
     }
