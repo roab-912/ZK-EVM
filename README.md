@@ -118,28 +118,36 @@ Chaque version a un fichier dédié dans [`.features/`](./.features/) qui contie
 
 ---
 
-## Build & test (à venir)
+## Build & test
 
 ```bash
-# Tests de l'EVM (rapide)
+# Tests de l'EVM (rapide, < 1 s) — crate `evm` uniquement
 cargo test -p evm
-
-# Lint
 cargo clippy --all-targets -- -D warnings
 cargo fmt --check
+```
 
-# Générer une preuve (à partir de v0.9)
-cargo run --release --bin host -- prove programs/add.hex
-cargo run --release --bin host -- verify
+Génération de preuve SP1 (à partir de v0.9). Prérequis : la toolchain SP1
+(`curl -L https://sp1up.succinct.xyz | bash && sp1up`) et `protoc`. Les crates
+`host`/`prover` vivent **hors** du workspace (pour que `evm` et la CI restent
+sans dépendance SP1) ; on les lance donc depuis `crates/host` :
+
+```bash
+cd crates/host
+cargo run --release -- prove  ../../programs/add.hex   # → target/proof.bin + métriques
+cargo run --release -- verify target/proof.bin         # → OK
 ```
 
 ---
 
 ## Métriques (à remplir à partir de v0.9)
 
+Preuve **core** SP1 (sans compression Groth16), prouveur CPU local (16 cœurs),
+programme `programs/add.hex` (`PUSH1 2, PUSH1 3, ADD, STOP`) :
+
 | Version | Temps gen. preuve | Taille preuve | Temps vérif. | Cycles RISC-V |
 |---|---|---|---|---|
-| v0.9-sp1 | — | — | — | — |
+| v0.9-sp1 | ~51 s | ~2.65 MB | ~93 ms | 6 777 |
 | v0.17 | — | — | — | — |
 | v0.22-keccak | — | — | — | — |
 

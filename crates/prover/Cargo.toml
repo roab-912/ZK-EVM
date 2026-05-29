@@ -1,0 +1,19 @@
+# SP1 guest program (zkVM target riscv32im-succinct-zkvm-elf).
+# Deliberately NOT a member of the root workspace: it builds with the `succinct`
+# toolchain for a different target. It depends on `evm` with default features off
+# (no_std), proving the interpreter is SP1-ready.
+[package]
+name = "prover"
+version = "0.0.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+[[bin]]
+name = "prover"
+path = "src/main.rs"
+
+[dependencies]
+sp1-zkvm = "6.2.2"
+evm = { path = "../evm", default-features = false }
+
+[workspace]

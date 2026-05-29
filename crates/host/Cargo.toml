@@ -1,0 +1,20 @@
+# SP1 host / driver: compiles the guest ELF (build.rs) and generates / verifies
+# proofs. Outside the root workspace (depends on the heavy sp1-sdk); build it from
+# this directory or with `--manifest-path crates/host/Cargo.toml`.
+[package]
+name = "host"
+version = "0.0.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+[[bin]]
+name = "host"
+path = "src/main.rs"
+
+[dependencies]
+sp1-sdk = { version = "6.2.2", features = ["blocking"] }
+
+[build-dependencies]
+sp1-build = "6.2.2"
+
+[workspace]
