@@ -4,6 +4,50 @@ Toutes les évolutions notables du projet sont documentées ici, une section par
 version (cf. `.features/vX.Y-*.md` pour les specs détaillées). Format inspiré de
 [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [v0.9-sp1] — 2026-05-29
+
+Phase 2 — branchement à SP1 : première preuve zkVM. **Aucun nouvel opcode**, que
+de l'infrastructure. On prouve l'exécution de `programs/add.hex`
+(`PUSH1 2, PUSH1 3, ADD, STOP`) et on vérifie la preuve.
+
+### Ajouté
+- Crate `crates/prover/` — programme guest SP1 (cible `riscv32im-succinct-zkvm-elf`) :
+  lit le bytecode via `sp1_zkvm::io::read`, exécute `evm::run`, et commit le top
+  de stack final (32 octets big-endian) comme valeurs publiques de la preuve.
+- Crate `crates/host/` — driver SP1 (API bloquante `sp1-sdk` 6.2.2) :
+  - `build.rs` compile l'ELF guest via `sp1_build::build_program`.
+  - sous-commande `prove <bytecode.hex>` → preuve dans `target/proof.bin` + métriques
+    (cycles RISC-V, temps de génération, taille).
+  - sous-commande `verify <proof.bin>` → re-dérive la vk depuis l'ELF embarqué et vérifie.
+- `programs/add.hex` (`600260030100`).
+- Section « Build & test » et table de métriques remplies dans le README.
+
+### Choix techniques
+- **`evm` reste sans dépendance SP1.** Les crates `prover`/`host` sont **exclus du
+  workspace racine** (`exclude` dans `Cargo.toml`) : `cargo test -p evm` et la CI
+  (qui n'a pas la toolchain SP1) ne les compilent jamais. Conséquence : on lance
+  `prove`/`verify` depuis `crates/host`, pas via `--bin host` à la racine.
+- Le guest dépend de `evm` avec `default-features = false` (no_std), validant que
+  l'interpréteur est SP1-ready ; `evm` était déjà no_std-compatible (rien à refacto).
+- **Preuve « core »** (pas de compression Groth16 ici) : suffisant pour le critère
+  d'acceptation, beaucoup plus rapide à générer, et vérifiable localement.
+- `.gitignore` : `/target` → `target/` pour ignorer aussi `crates/*/target/` (artefacts
+  SP1 + preuve de ~2.7 Mo).
+
+### Environnement
+- Toolchain SP1 installée via `sp1up` (cargo-prove sp1 6.2.2, toolchain `succinct`
+  rustc 1.93.0-dev). `protoc` requis par `sp1-prover-types` (installé hors root, exposé
+  via `PROTOC`).
+
+### Validation
+- Critère d'acceptation : `host prove ../../programs/add.hex` → preuve écrite ;
+  `host verify target/proof.bin` → **OK**.
+- Top de stack committé = `0x…05` (2 + 3 = 5) ✓.
+- Métriques (prouveur CPU local) : ~6 777 cycles, génération ~51 s, preuve ~2.65 Mo,
+  vérification ~93 ms.
+- `cargo test -p evm` (52 tests), `clippy --all-features -D warnings`, `fmt --check`
+  à la racine : toujours verts (l'exclusion ne touche pas la CI).
+
 ## [v0.8-swap1] — 2026-05-29
 
 Phase 1 — échange de la stack. Dernier opcode de la phase 1 : l'interpréteur

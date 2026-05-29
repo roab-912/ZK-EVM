@@ -1,6 +1,10 @@
 [workspace]
 resolver = "2"
 members = ["crates/evm"]
+# The SP1 crates live outside the workspace on purpose: `evm` must stay free of
+# any SP1 dependency, and `cargo test --all` / CI (no SP1 toolchain) must not try
+# to build them. Build them from their own directory (see crates/host/README).
+exclude = ["crates/prover", "crates/host"]
 
 [workspace.package]
 edition = "2021"
