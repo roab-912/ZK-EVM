@@ -266,3 +266,75 @@ fn dup1_underflow_matches_revm() {
     let mut state = EvmState::new(code);
     assert_eq!(run(&mut state), Err(EvmError::StackUnderflow));
 }
+
+#[test]
+fn swap1_matches_revm() {
+    let programs: &[&[u8]] = &[
+        &[0x60, 0x01, 0x60, 0x02, 0x90, 0x00], // PUSH1 1, PUSH1 2, SWAP1 -> [2, 1]
+        &[0x60, 0x01, 0x60, 0x02, 0x60, 0x03, 0x90, 0x00], // ... SWAP1 -> [1, 3, 2]
+    ];
+
+    for &program in programs {
+        let code = program.to_vec();
+        let (revm_result, revm_stack) = revm_exec(code.clone());
+
+        let mut state = EvmState::new(code.clone());
+        run(&mut state).unwrap();
+
+        assert!(state.halted, "not halted for {program:02x?}");
+        assert_eq!(
+            revm_result,
+            InstructionResult::Stop,
+            "revm result for {program:02x?}"
+        );
+        assert_eq!(state.stack, revm_stack, "stack mismatch for {program:02x?}");
+    }
+}
+
+#[test]
+fn swap1_underflow_matches_revm() {
+    // SWAP1 with a single item: both revm and our interpreter must fail.
+    let code = vec![0x60, 0x05, 0x90, 0x00]; // PUSH1 5, SWAP1, STOP
+
+    let (revm_result, _) = revm_exec(code.clone());
+    assert_eq!(revm_result, InstructionResult::StackUnderflow);
+
+    let mut state = EvmState::new(code);
+    assert_eq!(run(&mut state), Err(EvmError::StackUnderflow));
+}
+
+/// Decode a hex string (whitespace ignored) into bytes.
+fn decode_hex(s: &str) -> Vec<u8> {
+    let digits: Vec<u8> = s
+        .bytes()
+        .filter(|b| !b.is_ascii_whitespace())
+        .map(|b| (b as char).to_digit(16).expect("invalid hex digit") as u8)
+        .collect();
+    assert_eq!(digits.len() % 2, 0, "odd number of hex digits");
+    digits.chunks_exact(2).map(|p| (p[0] << 4) | p[1]).collect()
+}
+
+/// End-of-Phase-1 demo: the `programs/arith.hex` bytecode mixes PUSH1, ADD, MUL,
+/// DUP1 and SWAP1, and must run identically under revm.
+#[test]
+fn arith_demo_program_matches_revm() {
+    let hex = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../programs/arith.hex"
+    ));
+    let code = decode_hex(hex);
+
+    let (revm_result, revm_stack) = revm_exec(code.clone());
+
+    let mut state = EvmState::new(code);
+    run(&mut state).unwrap();
+
+    assert!(state.halted);
+    assert_eq!(revm_result, InstructionResult::Stop);
+    assert_eq!(state.stack, revm_stack);
+    // Trace: 2+3=5, *4=20, DUP1 -> [20,20], PUSH1 7, SWAP1 -> [20, 7, 20].
+    assert_eq!(
+        state.stack,
+        vec![U256::from(20), U256::from(7), U256::from(20)]
+    );
+}

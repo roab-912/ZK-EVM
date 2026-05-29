@@ -4,6 +4,35 @@ Toutes les évolutions notables du projet sont documentées ici, une section par
 version (cf. `.features/vX.Y-*.md` pour les specs détaillées). Format inspiré de
 [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [v0.8-swap1] — 2026-05-29
+
+Phase 1 — échange de la stack. Dernier opcode de la phase 1 : l'interpréteur
+exécute désormais de petits programmes mêlant arithmétique et manipulation de
+stack.
+
+### Ajouté
+- Opcode `SWAP1` (`0x90`) : échange le top et le second élément de la stack.
+- Helper `swap(state, n)` généralisé (échange le top avec l'élément à `n` positions
+  sous lui), prêt pour `SWAP2`..`SWAP16` (v0.11).
+- Tests natifs (`swap1.rs`) : `[1,2]`→`[2,1]`, n'échange que les deux du haut
+  (`[1,2,3]`→`[1,3,2]`), underflow sur stack vide et sur un seul élément.
+- Extension de l'oracle revm (`swap1_matches_revm`, `swap1_underflow_matches_revm`).
+- **Programme de démo** `programs/arith.hex` (critère de fin de Phase 1) combinant
+  `PUSH1`, `ADD`, `MUL`, `DUP1`, `SWAP1` → stack finale `[20, 7, 20]`, validé contre
+  revm par le test `arith_demo_program_matches_revm` (décodage hex du fichier).
+
+### Choix techniques
+- **Cas d'erreur `SWAP1`** : on asserte la variante exacte `StackUnderflow` côté
+  revm (contrairement à `DUP` qui renvoie `StackOverflow`) — revm renvoie bien
+  `StackUnderflow` pour un `SWAP` sur stack trop courte.
+
+### Validation
+- `cargo fmt --check`, `cargo clippy --all-targets -D warnings`, `cargo test --all`
+  (52 tests) : OK.
+- Build `--no-default-features` (`no_std`) : OK.
+- `revm` : `SWAP1` (`[1,2]`→`[2,1]` et `[1,2,3]`→`[1,3,2]`) → stack identique ;
+  underflow rejeté des deux côtés ; programme de démo `arith.hex` → stack identique.
+
 ## [v0.7-dup1] — 2026-05-28
 
 Phase 1 — duplication de la stack.
